@@ -84,7 +84,7 @@ class CleanDuplicates(Processor):
     Processor that outputs a new dataframe that removes duplicate rows.
     Optionally can sort the dataframe before removing duplicates.
 
-    Two rows are considered duplicates if and only if all values specified in 
+    Two rows are considered duplicates if and only if all values specified in
     duplicate_col_names matches.
 
     By default, the first instance of a duplicate is retained, and all others
@@ -98,7 +98,7 @@ class CleanDuplicates(Processor):
 
     sort_col_names : List[str], optional
         column names to sort by, by default None
- 
+
     reverse_sort : bool, optional
         sort in ascending order, by default False
     """
@@ -185,7 +185,7 @@ class AddNormalizedColumn(Processor):
     ----------
     groupby : str
         the column to group by
-    
+
     input_col_name : str
         the input column to normalize
 
@@ -244,8 +244,8 @@ class ExpandColumn(Processor):
 
     mapping : Dict[str, List[str]]
         a dictionary mapping a value to a list of values. The processor will
-        look at the value at input_col_name, use it as the key to index into mapping, and 
-        get the corresponding list of strings that will used as the values for the new 
+        look at the value at input_col_name, use it as the key to index into mapping, and
+        get the corresponding list of strings that will used as the values for the new
         metrics with names in output_col_names.
     """
 
@@ -528,7 +528,7 @@ class FilterByIndex(Processor):
         the name of the index to use when filtering
     index_value : Any
         the value to compare with
-    
+
     Examples
     --------
     >>> a = Evaluation(pd.DataFrame(
@@ -545,7 +545,7 @@ class FilterByIndex(Processor):
     def __init__(self, index_name: str, index_value: Any):
         self.index_name = index_name
         self.index_value = index_value
-    
+
     def process(self, input_eval: Evaluation):
         old_df = input_eval.get_df()
         if isinstance(old_df.index, pd.MultiIndex):
@@ -555,6 +555,42 @@ class FilterByIndex(Processor):
             new_df = old_df.loc[self.index_value:self.index_value]
         else:
             raise ValueError("Incompatible dataframe index.")
+        return Evaluation(new_df, input_eval.get_eval_id())
+
+class RemoveByIndex(Processor):
+    """
+    Processor that allows you to remove a row from the evaluation
+    which index is within the input index names list.
+
+    Parameters
+    ----------
+    index_names : list
+        the list of index names to remove
+
+    Examples
+    --------
+    >>> a = Evaluation(pd.DataFrame(
+    ... data=[
+    ...     {"x": 1, "y": 5},
+    ...     {"x": 4, "y": 10},
+    ...     {"x": 9, "y": 19}
+    ... ],
+    ... index=pd.Index(["a", "b", "c"], name="key")))
+    >>> a.process([RemoveByIndex("key", ["a", "c"])]).get_df()
+        x    y
+    key
+    b   4    10
+    """
+    def __init__(self, index_name: str, index_values: list):
+        self.index_name = index_name
+        self.index_values = index_values
+
+    def process(self, input_eval: Evaluation):
+        old_df = input_eval.get_df()
+        if isinstance(old_df.index, pd.MultiIndex):
+            new_df = old_df.drop(index=self.index_values, level=self.index_name)
+        elif isinstance(old_df.index, pd.Index):
+            new_df = old_df.drop(index=self.index_values)
         return Evaluation(new_df, input_eval.get_eval_id())
 
 class Aggregate(Processor):
@@ -585,7 +621,7 @@ class Aggregate(Processor):
     """
     def __init__(self, func: Callable[[pd.Series], Union[int, float]]):
         self.func = func
-    
+
     def process(self, input_eval: Evaluation):
         old_df = input_eval.get_df()
         numeric_columns = old_df.select_dtypes(include=['number']).dropna(axis=1).columns
@@ -637,7 +673,7 @@ class CompareToFirst(Processor):
     suffix : str
         the suffix to use when creating new columns that contain the relative
         comparison to the first row, by default ".relative"
-    
+
     Examples
     --------
     >>> a = Evaluation(pd.DataFrame(

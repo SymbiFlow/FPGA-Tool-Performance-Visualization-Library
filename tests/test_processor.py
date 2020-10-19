@@ -24,6 +24,7 @@ class TestProcessor:
     NormalizeAround()
     Normalize()
     FilterByIndex()
+    RemoveByIndex()
     Aggregate()
     GeomeanAggregate()
     CompareToFirst()
@@ -285,9 +286,9 @@ class TestProcessor:
                 1,
             ], name="idx")
         )
-        
+
         eval1 = Evaluation(df, eval_id=10)
-        
+
         pipeline = [SortIndex(["idx"])]
         result = eval1.process(pipeline)
         expected = pd.DataFrame(
@@ -523,16 +524,6 @@ class TestProcessor:
         assert_frame_equal(result.get_df(), expected_df)
         assert result.get_eval_id() == 10
 
-        # filter by second index
-        pipeline = [FilterByIndex("key", "a")]
-        result = eval1.process(pipeline)
-
-        expected_index = pd.Index(["a"], name="group")
-        expected_df = pd.DataFrame({"value": [10]}, index=expected_index)
-
-        assert_frame_equal(result.get_df(), expected_df)
-        assert result.get_eval_id() == 10
-
     def test_filterbyindex_singleindex(self):
         """ tests if filtering by index works for single-index dataframe """
         # test dataframe
@@ -552,6 +543,64 @@ class TestProcessor:
         result = eval1.process(pipeline)
         expected_index = pd.Index(["a", "a", "a"], name="key")
         expected_df = pd.DataFrame({"value": [10, 5, 3]}, index=expected_index)
+
+        assert_frame_equal(result.get_df(), expected_df)
+        assert result.get_eval_id() == 10
+        """ tests if filtering by index works for single-index dataframe """
+
+    def test_removebyindex_multindex(self):
+        """ tests if removing by index works for multi-index dataframe """
+        # test dataframe
+        # {"group": "a", "key": "a", "value": 10},
+        # {"group": "a", "key": "b", "value": 5},
+        # {"group": "a", "key": "c", "value": 3},
+        # {"group": "b", "key": "d", "value": 100},
+        # {"group": "b", "key": "e", "value": 31}
+
+        idx_arrays = [["a", "a", "a", "b", "b"], ["a", "b", "c", "d", "e"]]
+        index = pd.MultiIndex.from_arrays(idx_arrays, names=("group", "key"))
+        df = pd.DataFrame({"value": [10, 5, 3, 100, 31]}, index=index)
+        eval1 = Evaluation(df, eval_id=10)
+
+        expected_idx_arrays = [["b", "b"], ["d", "e"]]
+        expected_index = pd.MultiIndex.from_arrays(expected_idx_arrays, names=("group", "key"))
+        expected_df = pd.DataFrame({"value": [100, 31]}, index=expected_index)
+
+        # filter by first index
+        pipeline = [RemoveByIndex("group", ["a"])]
+        result_group = eval1.process(pipeline)
+
+        # filter by first index
+        pipeline = [RemoveByIndex("key", ["a", "b", "c"])]
+        result_key = eval1.process(pipeline)
+
+        assert_frame_equal(result_group.get_df(), expected_df)
+        assert_frame_equal(result_key.get_df(), expected_df)
+
+        assert result_group.get_eval_id() == 10
+        assert result_key.get_eval_id() == 10
+
+    def test_removebyindex_singleindex(self):
+        """ tests if removing by index works for single-index dataframe """
+        # test dataframe
+        # {"key": "a", "value": 10},
+        # {"key": "a", "value": 5},
+        # {"key": "a", "value": 3},
+        # {"key": "b", "value": 100},
+        # {"key": "b", "value": 31}
+
+        idx_array = ["a", "a", "a", "b", "b"]
+        index = pd.Index(idx_array, name="key")
+        df = pd.DataFrame({"value": [10, 5, 3, 100, 31]}, index=index)
+        eval1 = Evaluation(df, eval_id=10)
+
+        expected_idx_array = ["b", "b"]
+        expected_index = pd.Index(expected_idx_array, name="key")
+        expected_df = pd.DataFrame({"value": [100, 31]}, index=expected_index)
+
+        # filter by first index
+        pipeline = [RemoveByIndex("key", ["a"])]
+        result = eval1.process(pipeline)
 
         assert_frame_equal(result.get_df(), expected_df)
         assert result.get_eval_id() == 10
