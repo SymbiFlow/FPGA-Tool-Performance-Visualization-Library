@@ -308,6 +308,21 @@ class Reindex(Processor):
         return Evaluation(new_df, input_eval.get_eval_id())
 
 
+class ResetIndex(Processor):
+    """
+    Processor that resets the indices.
+    visualization.
+    """
+
+    def __init__(self):
+        pass
+
+    def process(self, input_eval: Evaluation) -> Evaluation:
+        input_df = input_eval.get_df()
+        new_df = input_df.reset_index()
+        return Evaluation(new_df, input_eval.get_eval_id())
+
+
 class SortIndex(Processor):
     """
     Processor that sorts an evaluation by indices.

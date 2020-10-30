@@ -102,15 +102,26 @@ class TestGoogleStorageFetcherSmall(unittest.TestCase):
                 eval_num=eval_num)
             result = gsf.get_evaluation().get_df()
 
-            expected = pd.DataFrame({
-                "build_num": [x for x in range(0, 22)],
-                "date": ["2020-07-17T22:12:40" for _ in range(22)],
-                "board": ["arty" for _ in range(22)],
-                "toolchain": ["vivado" for _ in range(22)],
-                "pr_tool": ["vivado" for _ in range(22)],
-                "synthesis_tool": ["vivado" for _ in range(22)],
-                "freq": [0.0 for _ in range(22)]
-                })
+            import sys
+            print("RESULT", result, file=open("/tmp/err", "w"))
+
+            try:
+                expected = pd.DataFrame({
+                    "build_num": [x for x in range(0, 22)],
+                    "date": ["2020-07-17T22:12:40" for _ in range(22)],
+                    "board": ["arty" for _ in range(22)],
+                    "toolchain": ["vivado" for _ in range(22)],
+                    "pr_tool": ["vivado" for _ in range(22)],
+                    "synthesis_tool": ["vivado" for _ in range(22)],
+                    "clock_name": ["" for _ in range(22)],
+                    "actual": [0.0 for _ in range(22)],
+                    "requested": [0.0 for _ in range(22)],
+                    "met": [False for _ in range(22)],
+                    "hold_violation": [0.0 for _ in range(22)],
+                    "setup_violation": [0.0 for _ in range(22)],
+                    })
+            except Exception as e:
+                print(e, file=open("/tmp/err", "a"))
             assert_frame_equal(result, expected)
 
             eval_id = gsf.get_evaluation().get_eval_id()
@@ -165,7 +176,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
             with open(evals_fn, "r") as f:
                 json_data = f.read()
                 m.get(evals_url, text=json_data)
-            
+
             # setup /evals?page=2 request mock
             with open(evals_fn2, "r") as f:
                 json_data = f.read()
@@ -179,7 +190,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
                     # /build/:buildid
                     build_url = f'https://hydra.vtr.tools/build/{build_num}'
                     m.get(build_url, text=json_data)
-                    
+
                     # /meta.json
                     meta_url = f'https://hydra.vtr.tools/build/{build_num}/download/5/meta.json'
                     payload = {
@@ -226,7 +237,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
             # setup /evals request mock
             with open(evals_fn, "r") as f:
                 json_data = f.read()
-                m.get(evals_url, text=json_data) 
+                m.get(evals_url, text=json_data)
 
             # setup /build and /meta.json request mock
             with open(build_fn, "r") as f:
@@ -236,7 +247,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
                     # /build/:buildid
                     build_url = f'https://hydra.vtr.tools/build/{build_num}'
                     m.get(build_url, text=json_data)
-                    
+
                     # /meta.json
                     meta_url = f'https://hydra.vtr.tools/build/{build_num}/download/5/meta.json'
                     payload = {
@@ -285,7 +296,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
             # setup /evals request mock
             with open(evals_fn, "r") as f:
                 json_data = f.read()
-                m.get(evals_url, text=json_data) 
+                m.get(evals_url, text=json_data)
 
             # setup /build and /meta.json request mock
             with open(build_fn, "r") as f:
@@ -296,7 +307,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
                     # /build/:buildid
                     build_url = f'https://hydra.vtr.tools/build/{build_num}'
                     m.get(build_url, text=json_data)
-                    
+
                     # /meta.json
                     meta_url = f'https://hydra.vtr.tools/build/{build_num}/download/5/meta.json'
                     payload = {
@@ -312,7 +323,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
                     # /build/:buildid
                     build_url = f'https://hydra.vtr.tools/build/{build_num}'
                     m.get(build_url, text=json_data)
-                    
+
                     # /meta.json
                     meta_url = f'https://hydra.vtr.tools/build/{build_num}/download/5/meta.json'
                     payload = {
@@ -328,7 +339,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
                     # /build/:buildid
                     build_url = f'https://hydra.vtr.tools/build/{build_num}'
                     m.get(build_url, text=json_data)
-                    
+
                     # /meta.json
                     meta_url = f'https://hydra.vtr.tools/build/{build_num}/download/5/meta.json'
                     payload = {
@@ -377,7 +388,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
             # setup /evals request mock
             with open(evals_fn, "r") as f:
                 json_data = f.read()
-                m.get(evals_url, text=json_data) 
+                m.get(evals_url, text=json_data)
 
             # setup /evals?page=2 request mock
             with open(evals_fn2, "r") as f:
@@ -392,7 +403,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
                     # /build/:buildid
                     build_url = f'https://hydra.vtr.tools/build/{build_num}'
                     m.get(build_url, text=json_data)
-                    
+
                     # /meta.json
                     meta_url = f'https://hydra.vtr.tools/build/{build_num}/download/5/meta.json'
                     payload = {"build_num": build_num}
@@ -442,7 +453,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
                     # /build/:buildid
                     build_url = f'https://hydra.vtr.tools/build/{build_num}'
                     m.get(build_url, text=json_data)
-                    
+
                     # /meta.json
                     meta_url = f'https://hydra.vtr.tools/build/{build_num}/download/5/meta.json'
                     payload = {
@@ -483,7 +494,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
         get_evaluation() should return an Evaluation corresponding to the small
         dataset and hydra_clock_names attribute.
 
-        Tests whether the ordering of hydra_clock_names is correctly 
+        Tests whether the ordering of hydra_clock_names is correctly
         implemented.
         """
         with requests_mock.Mocker() as m:
@@ -547,7 +558,7 @@ class TestHydraFetcherSmall(unittest.TestCase):
                     expected_col = [expected_clock for _ in range(4)]
                     expected_series = pd.Series(expected_col, name="freq")
                     assert_series_equal(result["freq"], expected_series)
-            
+
             # test that the shortest clock name is chosen if no matches
             hf = HydraFetcher(
                 project="dusty",
